@@ -2,12 +2,12 @@
 
 ## Summary
 
-**Token reduction: ~1,300 tokens (27% smaller!)**
+**Token reduction: ~1,100 tokens (23% smaller!)**
 
 - v3: 500 lines, ~16,883 chars ≈ **4,800 tokens**
-- v4: 348 lines, ~12,199 chars ≈ **3,500 tokens**
+- v4: 356 lines, ~12,796 chars ≈ **3,700 tokens**
 
-**Savings per request:** ~1,300 input tokens = significant cost reduction for high-volume usage
+**Savings per request:** ~1,100 input tokens = significant cost reduction for high-volume usage
 
 ---
 
@@ -19,6 +19,12 @@
    - All default categories now have emoji prefixes (💼 work, 🛒 shopping, etc.)
    - Makes UI more visually scannable
    - Minimal token cost (~10 tokens total)
+
+2. **Smarter priority detection for appointments**
+   - Added logic for important appointments: meetings/calls with specific time + critical context
+   - Examples: "созвон с инвестором в 14:00" → HIGH (can't be missed)
+   - Logic: fixed time slots with important people/situations = automatically HIGH priority
+   - Makes priority assignment more intuitive and realistic
 
 ### ✂️ Removed / Simplified
 
@@ -94,14 +100,14 @@
 **Cost savings:**
 - If you process 1,000 brain dumps/month:
   - v3: 1,000 × 4,800 = 4.8M input tokens
-  - v4: 1,000 × 3,500 = 3.5M input tokens
-  - **Savings: 1.3M tokens/month**
+  - v4: 1,000 × 3,700 = 3.7M input tokens
+  - **Savings: 1.1M tokens/month**
 
 **At GPT-4 pricing (~$0.03/1k tokens):**
-- Monthly savings: ~$39
-- Annual savings: ~$468
+- Monthly savings: ~$33
+- Annual savings: ~$396
 
-**Quality impact:** None - all core functionality preserved
+**Quality impact:** IMPROVED - added smarter priority detection for appointments while maintaining all core functionality
 
 ---
 

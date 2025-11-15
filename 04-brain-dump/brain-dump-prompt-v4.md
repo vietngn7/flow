@@ -77,8 +77,15 @@ If ambiguous: make reasonable assumptions, document in metadata.parsing_notes
 </date_time_extraction>
 
 <priority_detection>
-HIGH: "срочно", "asap", "важно", "критично", "немедленно", "!!!", CAPS, "баг в проде", "deadline сегодня"
-MEDIUM: Time-bound but not urgent ("завтра", "эта неделя"), work-related, specific dates within 7 days
+HIGH priority indicators:
+- Keywords: "срочно", "asap", "важно", "критично", "немедленно"
+- Punctuation: "!!!", CAPS LOCK text
+- Critical context: "баг в проде", "deadline сегодня"
+- Important appointments: meetings/calls with specific time + critical context
+  Examples: "созвон с инвестором в 14:00", "встреча с CEO завтра", "к врачу в 10:00"
+  Logic: Fixed time slots with important people/situations = can't be missed
+
+MEDIUM: Time-bound but not urgent ("завтра", "эта неделя"), work-related without specific time, dates within 7 days
 LOW: Future dates beyond 1 week, "когда-нибудь", "подумать о", "может быть", "хорошо было бы"
 NONE: No indicators, routine tasks
 </priority_detection>
@@ -229,7 +236,7 @@ Custom categories:
       "description": null,
       "due_date": "2025-11-16",
       "due_time": "09:00",
-      "priority": "high",
+      "priority": "medium",
       "category": "💼 work",
       "tags": ["работа"],
       "estimated_duration": "2h",
@@ -247,6 +254,7 @@ Custom categories:
 <reasoning>
 Task 1: "купить еду для мии" contains keyword "мии" → matches custom category "mia". Even though it could also match "🛒 shopping", we prefer custom.
 Task 2 & 3: No custom category match → use default "💼 work".
+Task 3: "завтра утром" = medium priority (time-bound but no urgency keywords, not a fixed appointment).
 Dates calculated from current_date (2025-11-15).
 </reasoning>
 </example>
@@ -323,7 +331,7 @@ Custom categories:
 </output>
 
 <reasoning>
-Demonstrates: emotional detection ("заебался" → frustrated), priority detection ("срочно", "ASAP" → high), custom category matching ("мии" → "mia", "инвестором" → "startup"), specific time extraction ("завтра в 14:00").
+Demonstrates: emotional detection ("заебался" → frustrated), priority detection ("срочно", "ASAP" → high for tasks 1-2; task 4 = high because fixed appointment "в 14:00" with critical context "инвестором"), custom category matching ("мии" → "mia", "инвестором" → "startup"), specific time extraction ("завтра в 14:00").
 </reasoning>
 </example>
 
