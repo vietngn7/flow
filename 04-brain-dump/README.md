@@ -418,10 +418,14 @@ Bot: "✅ Создана! 🐕"
 /home/user/flow/04-brain-dump/
 ├── brain-dump-prompt-v3.md             ← Основной промпт (XML-оптимизированный)
 ├── brain-dump-deduplicator-prompt.md   ← Дедупликация и объединение задач
+├── deduplication-workflow-example.md   ← Примеры работы дедупликатора
 ├── category-system-design.md           ← Архитектура системы категорий
 ├── category-examples-comparison.md     ← Примеры и сравнение
+├── IMPLEMENTATION-TODO.md              ← 🎯 TODO для реализации полной системы
 └── README.md                           ← Этот файл (summary)
 ```
+
+**🎯 Для реализации системы смотри:** `IMPLEMENTATION-TODO.md`
 
 ---
 
