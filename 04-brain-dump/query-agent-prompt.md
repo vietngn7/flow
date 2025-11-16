@@ -34,7 +34,7 @@ You will receive JSON input with the following structure:
 
 ```json
 {
-  "user_query": "natural language query from user",
+  "user_input": "natural language query from user",
   "tasks": [
     {
       "id": "task_001",
@@ -52,18 +52,19 @@ You will receive JSON input with the following structure:
   "context": {
     "current_date": "YYYY-MM-DD",
     "current_time": "HH:MM",
-    "current_day_of_week": "Monday|Tuesday|...",
+    "current_day_of_week": "Monday|Tuesday|... (optional)",
     "timezone": "Europe/Kiev",
-    "user_custom_categories": ["mia", "startup", "podcast"]
+    "user_custom_categories": ["mia", "startup", "podcast"] (optional, defaults to [])
   }
 }
 ```
 
 **Field Notes:**
-- `user_query`: The question or request from the user
+- `user_input`: The question or request from the user (renamed from user_query for consistency)
 - `tasks`: Complete task list (or filtered subset if very large)
 - `context.current_date`: Reference point for relative dates
-- `context.user_custom_categories`: Available custom categories for filtering
+- `context.current_day_of_week`: Day of the week (optional - if missing, calculate from current_date)
+- `context.user_custom_categories`: Available custom categories for filtering (optional - defaults to empty array if missing)
 </input_schema>
 
 ---
@@ -590,6 +591,21 @@ Examples:
 <instructions>
 Follow this process to answer queries:
 
+## Step 0: Validate and Normalize Context
+
+Before parsing the query, validate and normalize context fields:
+
+**Check optional fields:**
+- If `context.current_day_of_week` is missing:
+  - Calculate it from `context.current_date` (Monday = 0, Sunday = 6)
+  - Example: "2025-11-16" → Saturday
+
+- If `context.user_custom_categories` is missing or null:
+  - Set to empty array `[]`
+  - All category filtering will use default categories only
+
+This ensures the query agent works even if Orchestrator doesn't provide all context fields.
+
 ## Step 1: Classify Query Type
 
 Quickly determine if this is:
@@ -684,7 +700,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "что на сегодня?",
+  "user_input": "что на сегодня?",
   "tasks": [
     {"id": "t1", "title": "Код ревью", "due_date": "2025-11-16", "due_time": "14:00", "priority": "high", "completed": false},
     {"id": "t2", "title": "Встреча с клиентом", "due_date": "2025-11-16", "due_time": "16:00", "priority": "high", "completed": false},
@@ -728,7 +744,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "срочные задачи",
+  "user_input": "срочные задачи",
   "tasks": [
     {"id": "t1", "title": "Код ревью", "priority": "high", "due_date": "2025-11-16", "completed": false},
     {"id": "t2", "title": "Встреча", "priority": "high", "due_date": "2025-11-17", "completed": false},
@@ -764,7 +780,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "срочные рабочие задачи на завтра",
+  "user_input": "срочные рабочие задачи на завтра",
   "tasks": [
     {"id": "t1", "title": "Код ревью", "category": "work", "priority": "high", "due_date": "2025-11-17", "completed": false},
     {"id": "t2", "title": "Встреча", "category": "work", "priority": "high", "due_date": "2025-11-16", "completed": false},
@@ -801,7 +817,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "найди задачу про встречу",
+  "user_input": "найди задачу про встречу",
   "tasks": [
     {"id": "t1", "title": "Встреча с Андреем", "due_date": "2025-11-16", "due_time": "14:00", "completed": false},
     {"id": "t2", "title": "Подготовка к встрече", "due_date": "2025-11-16", "completed": false},
@@ -834,7 +850,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "сколько задач?",
+  "user_input": "сколько задач?",
   "tasks": [
     {"id": "t1", "completed": false},
     {"id": "t2", "completed": false},
@@ -870,7 +886,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "когда встреча?",
+  "user_input": "когда встреча?",
   "tasks": [
     {"id": "t1", "title": "Встреча с Андреем", "due_date": "2025-11-16", "due_time": "14:00", "completed": false},
     {"id": "t2", "title": "Код ревью", "due_date": "2025-11-16", "completed": false}
@@ -904,7 +920,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "что на сегодня?",
+  "user_input": "что на сегодня?",
   "tasks": [
     {"id": "t1", "title": "Позвонить маме", "due_date": "2025-11-17", "completed": false}
   ],
@@ -942,7 +958,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "задачи про мію",
+  "user_input": "задачи про мію",
   "tasks": [
     {"id": "t1", "title": "Купить корм для Мії", "category": "mia", "due_date": "2025-11-16", "completed": false},
     {"id": "t2", "title": "Ветеринар", "category": "mia", "due_date": "2025-11-18", "completed": false},
@@ -979,7 +995,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "что на этой неделе?",
+  "user_input": "что на этой неделе?",
   "tasks": [
     {"id": "t1", "title": "Task 1", "due_date": "2025-11-16", "completed": false},
     {"id": "t2", "title": "Task 2", "due_date": "2025-11-17", "completed": false},
@@ -1019,7 +1035,7 @@ Build two representations:
 **Input:**
 ```json
 {
-  "user_query": "все задачи",
+  "user_input": "все задачи",
   "tasks": [
     ... 50 tasks ...
   ],

@@ -1204,6 +1204,179 @@ When returning no_match, provide helpful next steps:
 
 ---
 
+<system_integration>
+## Applying Changes to Database
+
+**CRITICAL:** Task Modifier returns only the `changes` and `previous_values`, NOT the full updated task object.
+
+**System Responsibility:**
+
+The application layer MUST:
+
+1. Fetch the current task from database using `matched_task.id`
+2. Apply the `changes` object to the task
+3. Save the updated task back to database
+4. Update `context.last_mentioned_task_id` with the modified task ID
+
+**Example integration code:**
+
+```javascript
+const result = await taskModifier.execute(userInput, existingTasks, context);
+
+if (result.status === "success") {
+  const taskId = result.matched_task.id;
+
+  // 1. Fetch current task from DB
+  const task = await db.getTask(taskId);
+
+  // 2. Apply changes
+  Object.assign(task, result.changes);
+
+  // 3. Save to DB
+  await db.updateTask(taskId, task);
+
+  // 4. Update context
+  context.last_mentioned_task_id = taskId;
+
+  // 5. Return updated task to user
+  return {
+    success: true,
+    task: task,
+    explanation: result.explanation
+  };
+}
+
+if (result.status === "disambiguation_needed") {
+  // Show candidates to user for selection
+  return {
+    needsDisambiguation: true,
+    candidates: result.candidates,
+    question: result.question
+  };
+}
+
+if (result.status === "no_match") {
+  // Task not found
+  return {
+    error: true,
+    message: result.reason,
+    suggestion: result.suggestion
+  };
+}
+```
+
+### Completion Handling
+
+When `changes.completed = true`, the system should also:
+
+1. **Set completion timestamp:**
+   ```javascript
+   task.completed = true;
+   task.completion_time = new Date().toISOString();
+   ```
+
+2. **Optionally archive/hide:**
+   - Move to "completed" list
+   - Hide from active task views
+   - Keep for history/analytics
+
+3. **Update statistics:**
+   - Increment completed task counter
+   - Track completion rate
+
+**Example:**
+
+```javascript
+if (result.changes.completed === true) {
+  task.completed = true;
+  task.completion_time = new Date().toISOString();
+
+  // Archive task (optional)
+  await db.archiveTask(taskId);
+
+  // Update user stats
+  await db.incrementStat('tasks_completed');
+}
+```
+
+### Deletion Handling
+
+When operation_type is "delete":
+
+1. **Soft delete (recommended):**
+   ```javascript
+   task.deleted = true;
+   task.deleted_at = new Date().toISOString();
+   await db.updateTask(taskId, task);
+   ```
+
+2. **Hard delete (permanent):**
+   ```javascript
+   await db.deleteTask(taskId);
+   ```
+
+3. **Update context:**
+   ```javascript
+   context.has_existing_tasks = await db.hasAnyTasks();
+   ```
+
+### Error Handling
+
+**Invalid task ID:**
+```javascript
+if (!task) {
+  return {
+    error: true,
+    message: "Task not found in database",
+    taskId: result.matched_task.id
+  };
+}
+```
+
+**Database update failed:**
+```javascript
+try {
+  await db.updateTask(taskId, task);
+} catch (error) {
+  logger.error('Failed to update task', { taskId, error });
+  return {
+    error: true,
+    message: "Failed to save changes to database",
+    retry: true
+  };
+}
+```
+
+### Response to User
+
+After successful modification, format a user-friendly response:
+
+```javascript
+// After applying changes
+return {
+  success: true,
+  message: `✓ ${result.explanation}`,
+  task: {
+    id: task.id,
+    title: task.title,
+    priority: task.priority,
+    due_date: task.due_date,
+    due_time: task.due_time
+  },
+  changes: result.changes,
+  previous: result.previous_values
+};
+```
+
+**Example user messages:**
+- "✓ Изменил приоритет встречи с Андреем на high"
+- "✓ Перенес встречу на завтра (17 ноября)"
+- "✓ Отметил задачу 'Купить молоко' как выполненную"
+
+</system_integration>
+
+---
+
 <testing_checklist>
 ## Validation Test Cases
 
